@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          td  {    
+             border: 2px solid black; 
+         }
+         table {
+             margin:auto;
+         }
+        </style>
+    </head>
+    <body>
+         <div id="control">
+           <button onclick="createSave()">Сохранить</button> 
+           <button onclick="Changed()">Изменения</button>
+           <button onclick="createGet()"> Показать </button>
+        </div>
+        <div id="content">
+            <!-- здесь находится контент -->
+        </div>
+        <script>
+            var ma = []; //массив объектов
+         
+            function clr(i){
+                switch(i) {
+                case 0: 
+                    return "azure";
+                case 1:
+                    return "red";
+                case 2:
+                    return "green";
+                case 4:
+                    return "magenta";
+                    
+                }
+            }
+            function oldPrice(i,g) {
+                var price;
+                var a;
+                if (i==5 && g[10]!=0) {
+                    price = g[10] * g[1];
+                    var a = "<br><span style=\"background:#9370DB\">" + price + "</span>"; 
+                    return a;
+                } else {
+                    return "";
+                }  
+            }
+            
+            function outTable(d) {
+                
+                var n = d.length;
+                var s = "\
+        <form action=\"blList.php\" method=\"post\">\n\
+            <input type=\"submit\" name=\"blacklist\">\n\
+            <table><tr><th>Ком</th><th>Об</th><th colspan=\"2\">Эт</th><th>ссылка</th><th>цена</th>" +
+         "<th>метр</th><th>дата</th><th>адрес</th><th>Чс</th></tr>";
+                
+                
+                for(var i=0; i<n; i++){
+                    var g = d[i];
+                    var k = g.length-2;
+                    if (Number.parseInt(g[9])===3) {continue;}   
+                   
+                    s += "<tr style=\"background:" + clr(g[9])+";\">";
+                    for(var j=0;j<k;j++){
+                        if (j===4) {
+                           s +="<td><a href=\"" + g[j] + "\" target=\"_blank\">ссылка</a></td>";
+                        } else {
+                            s += "<td>" + g[j] + oldPrice(j,g) + "</td>";
+                        }   
+                    }
+                   s += "<td><input name=\"bl[]\" value=\""+ g[4] +"\" type=\"checkbox\"> </td>";
+                    s += "</tr>";
+                }
+                s += "</table> </form>";
+                
+                
+               document.getElementById("content").innerHTML = s;
+            
+            }
+            
+            function OutTableChanged() {
+                var n = d.length;
+                var s = "\
+        <form action=\"blList.php\" method=\"post\">\n\
+            <input type=\"submit\" name=\"blacklist\">\n\
+            <table><tr><th>Ком</th><th>Об</th><th colspan=\"2\">Эт</th><th>ссылка</th><th>цена</th>" +
+         "<th>метр</th><th>дата</th><th>адрес</th><th>Чс</th></tr>";
+                
+                
+                for(var i=0; i<n; i++){
+                    var g = d[i];
+                    var k = g.length-2;
+                    if (Number.parseInt(g[9])===1 || Number.parseInt(g[9])===2 || Number.parseInt(g[9])===4) {
+                   
+                    s += "<tr style=\"background:" + clr(g[9])+";\">";
+                    for(var j=0;j<k;j++){
+                        if (j===4) {
+                           s +="<td><a href=\"" + g[j] + "\" target=\"_blank\">ссылка</a></td>";
+                        } else {
+                            s += "<td>" + g[j] + oldPrice(j,g) + "</td>";
+                        }   
+                    }
+                   s += "<td><input name=\"bl[]\" value=\""+ g[4] +"\" type=\"checkbox\"> </td>";
+                    s += "</tr>";
+                }
+                }
+                s += "</table> </form>"; 
+               document.getElementById("content").innerHTML = s;
+            }
+         
+    var d;
+         
+    function createGet() {     
+      
+        var request = new XMLHttpRequest(); 
+        request.open("GET","Avito.php",true);
+           
+        request.addEventListener("readystatechange", function() {
+                if ((request.readyState===4) && (request.status===200)) {
+                  
+                    // var gfs= request.responseText;
+                // document.body.innerHTML=JSON.parse(request.responseText);
+                         d = JSON.parse(request.responseText); 
+                  outTable(d);
+                }
+            });
+        request.send();
+    }
+    
+      function Changed() {     
+      
+        var request = new XMLHttpRequest(); 
+        request.open("GET","Avito.php",true);
+           
+        request.addEventListener("readystatechange", function() {
+                if ((request.readyState===4) && (request.status===200)) {
+                  d = JSON.parse(request.responseText); 
+                  OutTableChanged(d);
+                }
+            });
+        request.send();
+    }
+     //отслеживание удаленных объявлений 
+    function sendSave(ma) {
+        
+        var rez = [];
+        for (var i=0; i<ma.length;i++){
+            var g = ma[i];
+            if(g[9]==1 || g[9]==2 || g[9]==4) { // если есть изменение в снимке, тогда записать эти данные
+              rez.push(g); //пересылать не ссылку, а целый объект 
+            } 
+        }
+        return JSON.stringify(rez); // перевод строки в json и передача по методу POST
+       
+     }
+     
+    function createSave() {
+            var request = new XMLHttpRequest();
+      
+         
+        request.open("POST",'saveAvito.php',true);
+        request.addEventListener('readystatechange', function() {
+                if ((request.readyState===4) && (request.status===200)) {                
+                    document.getElementById("content").innerHTML = request.responseText;
+                }
+              
+            });
+            //отрпвить структору из url - адресов
+            var t = sendSave(d);
+          var params = new FormData();
+          params.append("a",t);
+              request.send(params);
+         
+    }
+    </script>
+    </body>
+    
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="bootsrap/css/bootstrap.min.css">
+
+    </head>
+    <body>
+
+        <div class="container-fluid" id="control">
+
+            <div class="row">
+                <button onclick="createSave()" class="btn btn-success col-sm" >Сохранить</button> 
+                <button onclick="Changed()" class="btn btn-primary col-sm">Изменения</button>
+                <button onclick="createGet()" class="btn btn-secondary col-sm" > Показать </button>
+            </div>
+
+            <div class="row" id="content">
+                <!-- здесь находится контент -->
+              <!--           <form class="w-100" action="blList.php" method="post">
+                             
+                              <input class="btn btn-warning col " name="blacklist" type="submit">
+                            
+                             <div class="table-responsive">
+                                 <table class="table table-bordered table-sm"> 
+                             <thead class="thead-dark">
+                                 <tr>
+                                     <th>К</th>
+                                     <th>S</th>
+                                     <th colspan="2">Эт</th>
+                                     <th><img src="link-symbol.svg" height="20" width="20"></th>
+                                     <th>&#x20BD;</th>
+                                     <th>&#x20BD;/М<sup>2</sup></th>
+                                     <th>дата</th>
+                                     <th>адрес</th>
+                                     <th>Чс</th>
+                                 </tr>
+                             </thead>
+                             <tbody>
+                                 <tr style="background:green;">
+                                     <td>2 </td>
+                                     <td>46.1</td>
+                                     <td>1</td>
+                                     <td>2</td>
+                                     <td><a href="https://avito.ru/salavat/kvartiry/2-k_kvartira_46.1_m_12_et._1514838217" target="_blank"><img src="link-symbol.svg" height="20" width="20"></a></td>
+                                     <td>525000</td>
+                                     <td>11388</td>
+                                     <td class="p-0"><img  src="i.png" height="20" width="80"></td>
+                                     <td> Республика башкортостан, стерлитамакский район, село васильевка</td>
+                                     <td><input  name="bl[]" value="https://avito.ru/salavat/kvartiry/2-k_kvartira_46.1_m_12_et._1514838217" type="checkbox"> </td></tr>
+                                 </tbody></table> </form>  -->
+                <!-- -->
+            </div>
+        </div>
+
+
+    <script>
+            var ma = []; //массив объектов
+
+        function clr(i) {
+        switch (i) {
+                    case 0:
+                        return "azure";
+                    case 1:
+                        return "red";
+                    case 2:
+                        return "green";
+                    case 4:
+                        return "magenta";
+
+                }
+            }
+            function oldPrice(i, g) {
+                var price;
+                var a;
+                if (i == 5 && g[10] != 0) {
+                    price = g[10] * g[1];
+                    var a = "<br><span style=\"background:#9370DB\">" + price + "</span>";
+                    return a;
+                } else {
+                    return "";
+                }
+            }
+
+
+            function outTbl(d, par) {
+                var n = d.length;
+                var s = "\
+                <form class=\"w-100\" action=\"blList.php\" method=\"post\">\n\
+                     <input class=\"btn btn-warning col\" name=\"blacklist\" type=\"submit\">\n\
+                    <table class=\"table table-bordered table-sm\">\n\
+                    <thead class=\"thead-dark\">\n\
+                    <tr>\n\
+                        <th>К</th>\n\
+                        <th>S</th>\n\
+                        <th colspan=\"2\">Эт</th>\n\
+                        <th><img src=\"link-symbol.svg\" height=\"20\" width=\"20\"></th>\n\
+                        <th>&#x20BD;</th>\n\
+                        <th>&#x20BD;/M<sup>2</sup></th>\n\
+                        <th>дата</th>\n\
+                        <th>адрес</th>\n\
+                        <th>Чс</th>\n\
+                    </tr></thead><tbody>";
+
+                for (var i = 0; i < n; i++) {
+                    var g = d[i];
+                    var k = g.length - 2;
+                    if (-1 !== par.indexOf(Number.parseInt(g[9]))) {
+
+                        s += "<tr style=\"background:" + clr(g[9]) + ";\">";
+                        for (var j = 0; j < k; j++) {
+                            if (j === 4) {
+                                s += "<td><a href=\"" + g[j] + "\" target=\"_blank\"><img src=\"link-symbol.svg\" height=\"20\" width=\"20\"></a></td>";
+                            } else {
+                                s += "<td>" + g[j] + oldPrice(j, g) + "</td>";
+                            }
+                        }
+                        s += "<td><input name=\"bl[]\" value=\"" + g[4] + "\" type=\"checkbox\"> </td>";
+                        s += "</tr>";
+                    }
+                }
+                s += "</tbody></table> </form>";
+
+
+                document.getElementById("content").innerHTML = s;
+            }
+
+            var d;
+
+            function createGet() {
+
+                var request = new XMLHttpRequest();
+                request.open("GET", "Avito.php", true);
+
+                request.addEventListener("readystatechange", function () {
+                    if ((request.readyState === 4) && (request.status === 200)) {
+                        
+                        d = JSON.parse(request.responseText);
+                        outTbl(d, [0, 1, 2, 4]);
+                    }
+                });
+                request.send();
+            }
+
+            function Changed() {
+
+                var request = new XMLHttpRequest();
+                request.open("GET", "Avito.php", true);
+
+                request.addEventListener("readystatechange", function () {
+                    if ((request.readyState === 4) && (request.status === 200)) {
+                        d = JSON.parse(request.responseText);
+                        outTbl(d, [1, 2, 4]);
+                    }
+                });
+                request.send();
+            }
+            //отслеживание удаленных объявлений 
+            function sendSave(ma) {
+
+                var rez = [];
+                for (var i = 0; i < ma.length; i++) {
+                    var g = ma[i];
+                    if (g[9] == 1 || g[9] == 2 || g[9] == 4) { // если есть изменение в снимке, тогда записать эти данные
+                        rez.push(g); //пересылать не ссылку, а целый объект 
+                    }
+                }
+                return JSON.stringify(rez); // перевод строки в json и передача по методу POST
+
+            }
+
+            function createSave() {
+                var request = new XMLHttpRequest();
+
+
+                request.open("POST", 'saveAvito.php', true);
+                request.addEventListener('readystatechange', function () {
+                    if ((request.readyState === 4) && (request.status === 200)) {
+                        document.getElementById("content").innerHTML = request.responseText;
+                    }
+
+                });
+                //отрпвить структору из url - адресов
+                var t = sendSave(d);
+                var params = new FormData();
+                params.append("a", t);
+                request.send(params);
+
+            }
+        </script>
+    </body>
+
+</html>
